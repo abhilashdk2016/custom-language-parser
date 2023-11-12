@@ -11,6 +11,7 @@ var TokenType;
     TokenType[TokenType["BinaryOperator"] = 5] = "BinaryOperator";
     TokenType[TokenType["Let"] = 6] = "Let";
     TokenType[TokenType["Const"] = 7] = "Const";
+    TokenType[TokenType["EOF"] = 8] = "EOF";
 })(TokenType || (exports.TokenType = TokenType = {}));
 var KEYWORDS = {
     "let": TokenType.Let,
@@ -42,7 +43,7 @@ function tokenize(sourceCode) {
         else if (src[0] === ')') {
             tokens.push(token(src.shift(), TokenType.CloseParen));
         }
-        else if (src[0] === '+' || src[0] === "-" || src[0] === "*" || src[0] === "/") {
+        else if (src[0] === '+' || src[0] === "-" || src[0] === "*" || src[0] === "/" || src[0] === "%") {
             tokens.push(token(src.shift(), TokenType.BinaryOperator));
         }
         else if (src[0] === "=") {
@@ -79,14 +80,14 @@ function tokenize(sourceCode) {
             }
         }
     }
+    tokens.push({ type: TokenType.EOF, value: "EndOfFile" });
     return tokens;
 }
 exports.tokenize = tokenize;
-var fs_1 = require("fs");
-var path_1 = require("path");
-var source = (0, fs_1.readFileSync)((0, path_1.join)(__dirname, './test.txt'), 'utf-8');
-console.log(source);
-for (var _i = 0, _a = tokenize(source); _i < _a.length; _i++) {
-    var token_1 = _a[_i];
-    console.log(token_1);
-}
+// import { readFileSync } from 'fs';
+// import { join } from 'path';
+// const source = readFileSync(join(__dirname, './test.txt'), 'utf-8');
+// console.log(source);
+// for(const token of tokenize(source)) {
+//     console.log(token);
+// }
