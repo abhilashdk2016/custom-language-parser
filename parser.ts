@@ -1,4 +1,4 @@
-import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier, NullLiteral } from './ast';
+import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier} from './ast';
 import { tokenize, Token, TokenType } from './lexer';
 
 export default class Parser {
@@ -96,10 +96,6 @@ export default class Parser {
                     "Unexpected token found while evaluating parenthesised expression. Expected closing paranthesis"
                 );
                 return value;
-            }
-            case TokenType.Null: {
-                this.eat();
-                return { kind: "NullLiteral", value: "null"} as NullLiteral;
             }
             default:
                 console.error("Unexpected token found during parsing!", this.at());
