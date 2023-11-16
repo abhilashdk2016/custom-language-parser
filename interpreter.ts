@@ -1,5 +1,5 @@
 import { ValueType, RuntimeVal, NumberVal, MK_NULL } from './values';
-import { BinaryExpr, Identifier, NodeType, NumerictLiteral, Program, Stmt } from './ast';
+import { BinaryExpr, Identifier, NodeType, NumerictLiteral, Program, Stmt, VarDeclaration } from './ast';
 import Environment from './environment';
 
 function evaluate_numeric_expr(lhs: NumberVal, rhs: NumberVal, operator: string): NumberVal {
@@ -46,6 +46,11 @@ function evaluate_identifier(ident: Identifier, env: Environment): RuntimeVal {
     return val;
 }
 
+function evaluate_var_declaration(declaration: VarDeclaration, env: Environment): RuntimeVal {
+    const value = declaration.value ? evaluate(declaration.value, env) : MK_NULL()
+    return env.declareVar(declaration.identifier, value, declaration.constant);
+}
+
 export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
     switch(astNode.kind) {
         case "Identifier":
@@ -59,6 +64,8 @@ export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
                 return evalute_binary_expr(astNode as BinaryExpr, env);
         case "Program":
             return evaluate_program(astNode as Program, env);
+        case 'VarDeclaration':
+            return evaluate_var_declaration(astNode as VarDeclaration, env);
         default:
             console.error("No interpretation available for this astNode", JSON.stringify(astNode));
             process.exit(1);

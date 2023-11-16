@@ -1,4 +1,4 @@
-import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier} from './ast';
+import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier, VarDeclaration} from './ast';
 import { tokenize, Token, TokenType } from './lexer';
 
 export default class Parser {
@@ -34,8 +34,6 @@ export default class Parser {
             body: []
         };
 
-        
-
         while(this.not_eof()) {
             program.body.push(this.parse_stmt())
         }
@@ -44,7 +42,42 @@ export default class Parser {
     }
 
     private parse_stmt(): Stmt {
-        return this.parse_additive_expr();
+        switch(this.at().type) {
+            case TokenType.Let:
+            case TokenType.Const:
+                return this.parse_var_declaration();
+            default:
+                return this.parse_expr();
+        }
+    }
+
+    private parse_var_declaration(): Stmt {
+        const isConstant = this.eat().type === TokenType.Const;
+        const identifier = this.expect(TokenType.Identifier, "Expected identifier name following let or const keywords").value;
+        if(this.at().type === TokenType.Semicolon) 
+        {
+            this.eat();
+            if(isConstant) {
+                throw "Value must be assigned for constant expression";
+            }
+            return {
+                kind: "VarDeclaration",
+                identifier,
+                constant: isConstant,
+                value: undefined
+            } as VarDeclaration;
+        }
+
+        this.expect(TokenType.Equals, "Expected equals token following identifier in variable declaration");
+        const declaration = {
+            kind: "VarDeclaration",
+            value: this.parse_expr(),
+            constant: isConstant,
+            identifier
+        } as VarDeclaration;
+
+        this.expect(TokenType.Semicolon, "Variable declarations must end with semicolon");
+        return declaration;
     }
 
     private parse_additive_expr(): Expr {
@@ -78,7 +111,7 @@ export default class Parser {
     }
 
     private parse_expr(): Expr {
-        return this.parse_primary_expr();
+        return this.parse_additive_expr();
     }
 
     private parse_primary_expr(): Expr {

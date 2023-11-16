@@ -8,7 +8,8 @@ export enum TokenType {
     BinaryOperator,
     Let,
     Const,
-    EOF
+    EOF,
+    Semicolon
 }
 
 const KEYWORDS: Record<string, TokenType> = {
@@ -53,6 +54,8 @@ export function tokenize(sourceCode: string): Token[] {
             tokens.push(token(src.shift(), TokenType.BinaryOperator));
         } else if(src[0] === "=") {
             tokens.push(token(src.shift(), TokenType.Equals));
+        } else if(src[0] === ";") {
+            tokens.push(token(src.shift(), TokenType.Semicolon));
         } else {
             if(isInt(src[0])) {
                 let num = "";
