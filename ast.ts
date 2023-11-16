@@ -7,7 +7,9 @@ export type NodeType =
 | "CallExpr" 
 | "UnaryExpr" 
 | "FunctionDeclaration"
-| "AssignmentExpr";
+| "AssignmentExpr"
+| "Property"
+| "ObjectLiteral";
 
 export interface Stmt {
     kind: NodeType;
@@ -46,4 +48,13 @@ export interface AssignmentExpr extends Expr {
     kind: "AssignmentExpr";
     assignee: Expr;
     value: Expr;
+}
+export interface Property extends Expr {
+    kind: "Property";
+    key: string;
+    value?: Expr
+}
+export interface ObjectLiteral extends Expr {
+    kind: "ObjectLiteral";
+    properties: Property[]
 }

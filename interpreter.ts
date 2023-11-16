@@ -1,5 +1,5 @@
-import { ValueType, RuntimeVal, NumberVal, MK_NULL } from './values';
-import { AssignmentExpr, BinaryExpr, Identifier, NodeType, NumerictLiteral, Program, Stmt, VarDeclaration } from './ast';
+import { ValueType, RuntimeVal, NumberVal, MK_NULL, ObjectVal } from './values';
+import { AssignmentExpr, BinaryExpr, Identifier, NodeType, NumerictLiteral, ObjectLiteral, Program, Stmt, VarDeclaration } from './ast';
 import Environment from './environment';
 
 function evaluate_numeric_expr(lhs: NumberVal, rhs: NumberVal, operator: string): NumberVal {
@@ -46,6 +46,16 @@ function evaluate_identifier(ident: Identifier, env: Environment): RuntimeVal {
     return val;
 }
 
+function evaluate_object_expr(obj: ObjectLiteral, env: Environment): RuntimeVal {
+    const object = { type: "object", properties: new Map() } as ObjectVal;
+    for(const { key, value } of obj.properties) {
+        // Handles key: value
+        const runtimeVal = value === undefined ? env.lookupVar(key) : evaluate(value, env);
+        object.properties.set(key, runtimeVal);
+    }
+    return object;
+}
+
 function evaluate_var_declaration(declaration: VarDeclaration, env: Environment): RuntimeVal {
     const value = declaration.value ? evaluate(declaration.value, env) : MK_NULL()
     return env.declareVar(declaration.identifier, value, declaration.constant);
@@ -76,6 +86,8 @@ export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
             return evaluate_var_declaration(astNode as VarDeclaration, env);
         case "AssignmentExpr":
             return evaluate_assigment_declaration(astNode as AssignmentExpr, env);
+        case "ObjectLiteral":
+            return evaluate_object_expr(astNode as ObjectLiteral, env);
         default:
             console.error("No interpretation available for this astNode", JSON.stringify(astNode));
             process.exit(1);
