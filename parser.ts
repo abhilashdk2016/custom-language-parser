@@ -1,4 +1,4 @@
-import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier, VarDeclaration} from './ast';
+import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier, VarDeclaration, AssignmentExpr} from './ast';
 import { tokenize, Token, TokenType } from './lexer';
 
 export default class Parser {
@@ -110,8 +110,19 @@ export default class Parser {
         return left;
     }
 
+    private parse_assignment_expr(): Expr {
+        let left = this.parse_additive_expr();
+        if(this.at().type === TokenType.Equals) {
+            this.eat();
+            const value = this.parse_assignment_expr();
+            return { value, assignee: left, kind: "AssignmentExpr" } as AssignmentExpr;
+        }
+
+        return left;
+    }
+
     private parse_expr(): Expr {
-        return this.parse_additive_expr();
+        return this.parse_assignment_expr();
     }
 
     private parse_primary_expr(): Expr {

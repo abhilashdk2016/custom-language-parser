@@ -1,5 +1,5 @@
 import { ValueType, RuntimeVal, NumberVal, MK_NULL } from './values';
-import { BinaryExpr, Identifier, NodeType, NumerictLiteral, Program, Stmt, VarDeclaration } from './ast';
+import { AssignmentExpr, BinaryExpr, Identifier, NodeType, NumerictLiteral, Program, Stmt, VarDeclaration } from './ast';
 import Environment from './environment';
 
 function evaluate_numeric_expr(lhs: NumberVal, rhs: NumberVal, operator: string): NumberVal {
@@ -51,6 +51,14 @@ function evaluate_var_declaration(declaration: VarDeclaration, env: Environment)
     return env.declareVar(declaration.identifier, value, declaration.constant);
 }
 
+function evaluate_assigment_declaration(node: AssignmentExpr, env: Environment): RuntimeVal {
+    if(node.assignee.kind !== "Identifier") {
+        throw `Invalid assignment inside assignment expression`;
+    }
+    const varName = ((node.assignee) as Identifier).symbol;
+    return env.assignVar(varName, evaluate(node.value, env))
+}
+
 export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
     switch(astNode.kind) {
         case "Identifier":
@@ -66,6 +74,8 @@ export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
             return evaluate_program(astNode as Program, env);
         case 'VarDeclaration':
             return evaluate_var_declaration(astNode as VarDeclaration, env);
+        case "AssignmentExpr":
+            return evaluate_assigment_declaration(astNode as AssignmentExpr, env);
         default:
             console.error("No interpretation available for this astNode", JSON.stringify(astNode));
             process.exit(1);

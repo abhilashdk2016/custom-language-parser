@@ -6,7 +6,8 @@ export type NodeType =
 | "BinaryExpr" 
 | "CallExpr" 
 | "UnaryExpr" 
-| "FunctionDeclaration";
+| "FunctionDeclaration"
+| "AssignmentExpr";
 
 export interface Stmt {
     kind: NodeType;
@@ -39,4 +40,10 @@ export interface VarDeclaration extends Stmt {
     constant: boolean;
     identifier: string;
     value?: Expr;
+}
+
+export interface AssignmentExpr extends Expr {
+    kind: "AssignmentExpr";
+    assignee: Expr;
+    value: Expr;
 }
