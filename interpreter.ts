@@ -1,5 +1,5 @@
-import { ValueType, RuntimeVal, NumberVal, MK_NULL, ObjectVal, NativeFunctionVal } from './values';
-import { AssignmentExpr, BinaryExpr, CallExpr, Identifier, NodeType, NumerictLiteral, ObjectLiteral, Program, Stmt, VarDeclaration } from './ast';
+import { ValueType, RuntimeVal, NumberVal, MK_NULL, ObjectVal, NativeFunctionVal, FunctionVal } from './values';
+import { AssignmentExpr, BinaryExpr, CallExpr, FunctionDeclaration, Identifier, NumerictLiteral, ObjectLiteral, Program, Stmt, VarDeclaration } from './ast';
 import Environment from './environment';
 
 function evaluate_numeric_expr(lhs: NumberVal, rhs: NumberVal, operator: string): NumberVal {
@@ -59,12 +59,27 @@ function evaluate_object_expr(obj: ObjectLiteral, env: Environment): RuntimeVal 
 function evaluate_call_expr(expr: CallExpr, env: Environment): RuntimeVal {
     const args = expr.args.map(arg => evaluate(arg, env));
     const fn = evaluate(expr.calle, env);
-    if(fn.type !== "native-function") {
-        throw "Cannot call something that is not a function";
-    } 
-    const result = (fn as NativeFunctionVal).call(args, env);
-    console.log(result);
-    return result;
+    if(fn.type === "native-function") {
+        const result = (fn as NativeFunctionVal).call(args, env);
+        return result;
+    } else if(fn.type === "function") {
+        const func = (fn as FunctionVal);
+        const scope = new Environment(func.declarationEnv);
+        // create variables for the parameters
+        for(let i = 0; i < func.parameters.length; i++) {
+            const varname = func.parameters[i];
+            scope.declareVar(varname, args[i], false)
+        }
+        let result: RuntimeVal = MK_NULL();
+        for(const stmt of func.body) {
+            result = evaluate(stmt, scope);
+        }
+
+        return result;
+    }
+    
+
+    throw "Cannot call something that is not a function";
 }
 
 function evaluate_var_declaration(declaration: VarDeclaration, env: Environment): RuntimeVal {
@@ -78,6 +93,17 @@ function evaluate_assigment_declaration(node: AssignmentExpr, env: Environment):
     }
     const varName = ((node.assignee) as Identifier).symbol;
     return env.assignVar(varName, evaluate(node.value, env))
+}
+
+function evaluate_function_declaration(fn: FunctionDeclaration, env: Environment): RuntimeVal {
+    const fnd = {
+        type: "function",
+        name: fn.name,
+        parameters: fn.parameters,
+        declarationEnv: env,
+        body: fn.body
+    } as FunctionVal;
+    return env.declareVar(fn.name, fnd, true);
 }
 
 export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
@@ -101,6 +127,8 @@ export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
             return evaluate_object_expr(astNode as ObjectLiteral, env);
         case "CallExpr":
             return evaluate_call_expr(astNode as CallExpr, env);
+        case "FunctionDeclaration":
+            return evaluate_function_declaration(astNode as FunctionDeclaration, env)
         default:
             console.error("No interpretation available for this astNode", JSON.stringify(astNode));
             process.exit(1);

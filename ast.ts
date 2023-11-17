@@ -11,7 +11,8 @@ export type NodeType =
 | "Property"
 | "ObjectLiteral"
 | "MemberExpr"
-| "CallExpr";
+| "CallExpr"
+| "FunctionDeclaration";
 
 export interface Stmt {
     kind: NodeType;
@@ -74,4 +75,12 @@ export interface MemberExpr extends Expr {
     object: Expr;
     property: Expr;
     computed: boolean;
+}
+
+export interface FunctionDeclaration extends Stmt {
+    kind: "FunctionDeclaration";
+    parameters: string[];
+    name: string;
+    body: Stmt[];
+    // async: boolean;
 }

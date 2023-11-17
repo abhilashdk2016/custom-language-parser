@@ -1,4 +1,4 @@
-import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier, VarDeclaration, AssignmentExpr, Property, ObjectLiteral, CallExpr, MemberExpr} from './ast';
+import { Stmt, Program, Expr, BinaryExpr, NumerictLiteral, Identifier, VarDeclaration, AssignmentExpr, Property, ObjectLiteral, CallExpr, MemberExpr, FunctionDeclaration} from './ast';
 import { tokenize, Token, TokenType } from './lexer';
 
 export default class Parser {
@@ -46,9 +46,40 @@ export default class Parser {
             case TokenType.Let:
             case TokenType.Const:
                 return this.parse_var_declaration();
+            case TokenType.Fn:
+                return this.parse_function_declaration();
             default:
                 return this.parse_expr();
         }
+    }
+    parse_function_declaration(): Stmt {
+        this.eat(); // move pasts fn token
+        const name = this.expect(TokenType.Identifier, "Expected Function Name following fn keyword").value;
+        const args = this.parse_args();
+        const params: string[] = [];
+        // check if all parameters are string 
+        for(const arg of args) {
+            if(arg.kind !== "Identifier") {
+                throw "Inside function declaration expected parameters of type string";
+            }
+
+            params.push((arg as Identifier).symbol);
+        }
+
+        this.expect(TokenType.OpenBrace, "Function declaration should begin with brace");
+
+        const body: Stmt[] = [];
+        while(this.at().type !== TokenType.EOF && this.at().type !== TokenType.CloseBrace) {
+            body.push(this.parse_stmt());
+        }
+
+        this.expect(TokenType.CloseBrace, "Closing brace expected at the end of function declaration");
+
+        const fn = {
+            body, name, parameters: params, kind: "FunctionDeclaration"
+        } as FunctionDeclaration;
+
+        return fn;
     }
 
     private parse_var_declaration(): Stmt {
