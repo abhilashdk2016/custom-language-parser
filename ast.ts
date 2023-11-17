@@ -9,7 +9,9 @@ export type NodeType =
 | "FunctionDeclaration"
 | "AssignmentExpr"
 | "Property"
-| "ObjectLiteral";
+| "ObjectLiteral"
+| "MemberExpr"
+| "CallExpr";
 
 export interface Stmt {
     kind: NodeType;
@@ -23,6 +25,7 @@ export interface Program extends Stmt {
 export interface Expr extends Stmt {}
 
 export interface BinaryExpr extends Expr {
+    kind: "BinaryExpr";
     left: Expr;
     right: Expr;
     operator: string;
@@ -57,4 +60,18 @@ export interface Property extends Expr {
 export interface ObjectLiteral extends Expr {
     kind: "ObjectLiteral";
     properties: Property[]
+}
+
+export interface CallExpr extends Expr {
+    kind: "CallExpr",
+    args: Expr[];
+    calle: Expr;
+    operator: string;
+}
+
+export interface MemberExpr extends Expr {
+    kind: "MemberExpr",
+    object: Expr;
+    property: Expr;
+    computed: boolean;
 }
