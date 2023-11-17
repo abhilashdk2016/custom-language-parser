@@ -1,5 +1,5 @@
-import { ValueType, RuntimeVal, NumberVal, MK_NULL, ObjectVal } from './values';
-import { AssignmentExpr, BinaryExpr, Identifier, NodeType, NumerictLiteral, ObjectLiteral, Program, Stmt, VarDeclaration } from './ast';
+import { ValueType, RuntimeVal, NumberVal, MK_NULL, ObjectVal, NativeFunctionVal } from './values';
+import { AssignmentExpr, BinaryExpr, CallExpr, Identifier, NodeType, NumerictLiteral, ObjectLiteral, Program, Stmt, VarDeclaration } from './ast';
 import Environment from './environment';
 
 function evaluate_numeric_expr(lhs: NumberVal, rhs: NumberVal, operator: string): NumberVal {
@@ -56,6 +56,17 @@ function evaluate_object_expr(obj: ObjectLiteral, env: Environment): RuntimeVal 
     return object;
 }
 
+function evaluate_call_expr(expr: CallExpr, env: Environment): RuntimeVal {
+    const args = expr.args.map(arg => evaluate(arg, env));
+    const fn = evaluate(expr.calle, env);
+    if(fn.type !== "native-function") {
+        throw "Cannot call something that is not a function";
+    } 
+    const result = (fn as NativeFunctionVal).call(args, env);
+    console.log(result);
+    return result;
+}
+
 function evaluate_var_declaration(declaration: VarDeclaration, env: Environment): RuntimeVal {
     const value = declaration.value ? evaluate(declaration.value, env) : MK_NULL()
     return env.declareVar(declaration.identifier, value, declaration.constant);
@@ -88,6 +99,8 @@ export function evaluate(astNode: Stmt, env: Environment): RuntimeVal {
             return evaluate_assigment_declaration(astNode as AssignmentExpr, env);
         case "ObjectLiteral":
             return evaluate_object_expr(astNode as ObjectLiteral, env);
+        case "CallExpr":
+            return evaluate_call_expr(astNode as CallExpr, env);
         default:
             console.error("No interpretation available for this astNode", JSON.stringify(astNode));
             process.exit(1);

@@ -1,7 +1,7 @@
 import Environment from "./environment";
 import { evaluate } from "./interpreter";
 import Parser from "./parser";
-import { MK_NULL, MK_NUMBER, NumberVal, MK_BOOL } from "./values";
+import { MK_NULL, MK_NUMBER, NumberVal, MK_BOOL, MK_NativeFunction, RuntimeVal } from "./values";
 const readline = require('readline');
 var log = console.log;
 
@@ -34,5 +34,12 @@ async function repl() {
     env.declareVar("true", MK_BOOL(true), true);
     env.declareVar("false", MK_BOOL(false), true);
     env.declareVar("null", MK_NULL(), true);
+    // Define a native method
+    env.declareVar('print', MK_NativeFunction((args, scope) => {
+      return MK_NULL();
+    }), true);
+    env.declareVar('currentTime', MK_NativeFunction((args: RuntimeVal[], scope: Environment) => {
+      return MK_NUMBER(Date.now());
+    }), true);
     searchPrompt(env);
 }
